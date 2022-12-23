@@ -23,7 +23,7 @@ modules:
           srv-url: ${default-url}
     requires:
       - name: risk-management-db
-      - name: risk-management-uaa
+      - name: risk-management-auth
 
   - name: risk-management-db-deployer
     type: hdb
@@ -47,7 +47,7 @@ modules:
           name: srv-api # must be used in xs-app.json as well
           url: ~{srv-url}
           forwardAuthToken: true
-      - name: risk-management-uaa
+      - name: risk-management-auth
 
 resources:
   - name: risk-management-db
@@ -55,7 +55,7 @@ resources:
     parameters:
       service: hana
       service-plan: hdi-shared
-  - name: risk-management-uaa
+  - name: risk-management-auth
     type: org.cloudfoundry.managed-service
     parameters:
       service: xsuaa
@@ -64,12 +64,17 @@ resources:
       config:
         xsappname: risk-management-${org}-${space}
         tenant-mode: dedicated
-      role-collections:
-      - name: 'RiskManager-${space}'
-        description: Manage Risks
-        role-template-references:
-        - $XSAPPNAME.RiskManager
-      - name: 'RiskViewer-${space}'
-        description: View Risks
-        role-template-references:
-        - $XSAPPNAME.RiskViewer
+        role-collections:
+          - name: 'RiskManager-${space}'
+            description: Manage Risks
+            role-template-references:
+              - $XSAPPNAME.RiskManager
+          - name: 'RiskViewer-${space}'
+            description: View Risks
+            role-template-references:
+              - $XSAPPNAME.RiskViewer
+        oauth2-configuration:
+          # <-- add this
+          redirect-uris:
+            # example: - https://risk-management-approuter.cfapps.eu10-004.hana.ondemand.com/login/callback
+            - https://risk-management-approuter.cfapps.us10-001.hana.ondemand.com/login/callback
